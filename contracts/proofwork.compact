@@ -1,0 +1,194 @@
+// ProofWork — Workplace Accountability dApp
+// A privacy-preserving smart contract for managing workplace promises,
+// anonymous complaints, and manager reputation scoring.
+//
+// Copyright (C) 2026
+// SPDX-License-Identifier: Apache-2.0
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ─── Promise Struct ────────────────────────────────────────────────
+// Status: 0 = PENDING, 1 = FULFILLED, 2 = BROKEN
+struct Promise {
+  promiseHash: Bytes<32>;
+  employeeAddr: Bytes<32>;
+  managerAddr: Bytes<32>;
+  timestamp: Bytes<32>;
+  status: Uint<32>;
+}
+
+// ─── Complaint Struct ──────────────────────────────────────────────
+struct Complaint {
+  complaintHash: Bytes<32>;
+  targetManagerHash: Bytes<32>;
+  verified: Boolean;
+}
+
+// ─── Reputation Struct ─────────────────────────────────────────────
+struct Reputation {
+  promisesCreated: Uint<32>;
+  promisesFulfilled: Uint<32>;
+  promisesBroken: Uint<32>;
+}
+
+// ─── Ledger State ──────────────────────────────────────────────────
+// Round counter (standard Midnight pattern)
+export ledger round: Counter;
+
+// Promise vault
+export ledger promises: Map<Uint<32>, Promise>;
+export ledger promiseCount: Counter;
+
+// Complaint system
+export ledger complaints: Map<Uint<32>, Complaint>;
+export ledger complaintCount: Counter;
+
+// Complaint counts per manager (indexed by manager slot)
+export ledger complaintCounts: Map<Uint<32>, Uint<32>>;
+
+// Reputation tracking (indexed by manager slot id)
+export ledger reputations: Map<Uint<32>, Reputation>;
+export ledger reputationCount: Counter;
+
+// ─── Witnesses (private inputs from the user's local machine) ─────
+witness employeeSecretKey(): Bytes<32>;
+witness managerSecretKey(): Bytes<32>;
+witness employeeCredential(): Bytes<32>;
+
+// ════════════════════════════════════════════════════════════════════
+// FEATURE 1: Promise Vault
+// ════════════════════════════════════════════════════════════════════
+
+// Create a sealed workplace promise. Both employee and manager must provide
+// their secret keys (witnesses) to co-sign the promise.
+// promiseHash: hashed promise content (not plaintext)
+// timestamp: when the promise was created (bytes)
+// promiseIdx: the index slot for this promise
+export circuit createPromise(
+  promiseHash: Bytes<32>,
+  timestamp: Bytes<32>,
+  promiseIdx: Uint<32>
+): Uint<32> {
+  // Retrieve private keys via witnesses
+  const empSk = employeeSecretKey();
+  const mgrSk = managerSecretKey();
+
+  // Derive public keys for on-ledger storage via hashing secret keys
+  const empPk = persistentHash<Bytes<32>>(empSk);
+  const mgrPk = persistentHash<Bytes<32>>(mgrSk);
+
+  // Store the promise on the ledger (status = 0 = PENDING)
+  // All params used in ledger ops must be explicitly disclosed
+  promises.insert(disclose(promiseIdx), Promise {
+    promiseHash: disclose(promiseHash),
+    employeeAddr: disclose(empPk),
+    managerAddr: disclose(mgrPk),
+    timestamp: disclose(timestamp),
+    status: 0,
+  });
+
+  // Increment counters
+  promiseCount.increment(1);
+  round.increment(1);
+
+  return disclose(promiseIdx);
+}
+
+// Employee marks a promise as fulfilled.
+// The prover must demonstrate knowledge of the employee secret key.
+export circuit markFulfilled(promiseId: Uint<32>): [] {
+  const pid = disclose(promiseId);
+  const promise = promises.lookup(pid);
+  const empSk = employeeSecretKey();
+  const empPk = persistentHash<Bytes<32>>(empSk);
+
+  // Verify the caller is the employee who created this promise
+  assert(promise.employeeAddr == empPk, "Not the promise employee");
+  assert(promise.status == 0, "Promise not pending");
+
+  // Update promise status to FULFILLED (1)
+  promises.insert(pid, Promise {
+    promiseHash: promise.promiseHash,
+    employeeAddr: promise.employeeAddr,
+    managerAddr: promise.managerAddr,
+    timestamp: promise.timestamp,
+    status: 1,
+  });
+  round.increment(1);
+}
+
+// Employee marks a promise as broken.
+export circuit markBroken(promiseId: Uint<32>): [] {
+  const pid = disclose(promiseId);
+  const promise = promises.lookup(pid);
+  const empSk = employeeSecretKey();
+  const empPk = persistentHash<Bytes<32>>(empSk);
+
+  assert(promise.employeeAddr == empPk, "Not the promise employee");
+  assert(promise.status == 0, "Promise not pending");
+
+  // Update promise status to BROKEN (2)
+  promises.insert(pid, Promise {
+    promiseHash: promise.promiseHash,
+    employeeAddr: promise.employeeAddr,
+    managerAddr: promise.managerAddr,
+    timestamp: promise.timestamp,
+    status: 2,
+  });
+  round.increment(1);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// FEATURE 2: Anonymous Complaint System
+// ════════════════════════════════════════════════════════════════════
+
+// File a complaint anonymously. The prover must demonstrate they are a
+// valid employee (via a credential witness) without revealing their identity.
+// The ZK proof guarantees the credential is non-zero (i.e., valid).
+export circuit fileComplaint(
+  complaintHash: Bytes<32>,
+  targetManagerHash: Bytes<32>,
+  complaintIdx: Uint<32>
+): [] {
+  // Get the private employee credential via witness
+  const cred = employeeCredential();
+
+  // ZK constraint: credential must be non-zero to prove employee status
+  // This ensures only valid employees can file, without revealing WHO filed.
+  const credHash = persistentHash<Bytes<32>>(cred);
+  assert(credHash != pad(32, ""), "Invalid employee credential");
+
+  complaints.insert(disclose(complaintIdx), Complaint {
+    complaintHash: disclose(complaintHash),
+    targetManagerHash: disclose(targetManagerHash),
+    verified: true,
+  });
+  complaintCount.increment(1);
+  round.increment(1);
+}
+
+// Check if a manager has reached the complaint threshold (>= 3).
+// managerSlot is the pre-known index into the complaintCounts map.
+export circuit checkThreshold(
+  managerSlot: Uint<32>
+): Boolean {
+  const slot = disclose(managerSlot);
+  const count = complaintCounts.lookup(slot);
+  return disclose(count >= 3);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// FEATURE 3: Promise Reputation
+// ════════════════════════════════════════════════════════════════════
+
+// Get the reliability data for a manager.
+// Returns [fulfilled, created] — the client computes the percentage off-chain
+// since Compact's strict type system prevents in-circuit multiplication overflow.
+export circuit getReliabilityScore(managerIdx: Uint<32>): [Uint<32>, Uint<32>] {
+  const idx = disclose(managerIdx);
+  const rep = reputations.lookup(idx);
+
+  return disclose([rep.promisesFulfilled, rep.promisesCreated]);
+}

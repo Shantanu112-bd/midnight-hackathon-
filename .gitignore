@@ -1,0 +1,5 @@
+node_modules/
+.env
+proofwork/node_modules/
+proofwork/dist/
+.DS_Store

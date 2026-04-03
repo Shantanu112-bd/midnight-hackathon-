@@ -1,0 +1,13 @@
+import "./counter.compact"; // Just example import for now
+
+/**
+ * ProofWork Smart Contract
+ * Written in Compact for privacy-preserving work verification.
+ */
+module proof_work {
+    export value round: Counter;
+    
+    export circuit increment(): void {
+        round.increment(1);
+    }
+}

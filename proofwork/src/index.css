@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy text-white font-sans antialiased selection:bg-blueAccent/30 selection:text-white;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .bg-grid {
+    background-size: 60px 60px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+}
+
+#star-field-1 {
+  box-shadow: 154px 1245px #FFF, 126px 1452px #FFF, 845px 321px #FFF,
+  1200px 542px #FFF, 1800px 921px #FFF, 452px 1900px #FFF,
+  150px 800px #FFF, 900px 100px #FFF, 1400px 1600px #FFF,
+  500px 400px #FFF, 1100px 1200px #FFF, 300px 1500px #FFF, 1700px 100px #FFF;
+}
+
+#star-field-2 {
+  box-shadow: 450px 921px #FFF, 120px 321px #FFF, 980px 1450px #FFF,
+  1560px 210px #FFF, 890px 1800px #FFF, 210px 1100px #FFF,
+  1340px 760px #FFF, 670px 430px #FFF, 1100px 1300px #FFF, 340px 1600px #FFF;
+}
