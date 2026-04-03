@@ -1,68 +1,58 @@
-# Requirements: Midnight White Belt Project
+# Requirements: ProofWork Midnight dApp
 
 **Defined:** 2026-04-03
-**Core Value:** Mastery of privacy-preserving smart contract development and deployment on the Midnight network.
+**Core Value:** Secure and private data extraction and verification on-chain using Midnight's ZK-proof system.
 
 ## v1 Requirements
 
-Requirements for completing White Belt Milestones 1 & 2.
+### Project Structure (STRUC)
 
-### Environment Setup (SETUP)
+- [ ] **STRUC-01**: Create `/contracts` directory for .compact files.
+- [ ] **STRUC-02**: Create `/src` directory for core logic.
+- [ ] **STRUC-03**: Create `/api` directory for Express REST API.
 
-- [ ] **SETUP-01**: Install and update **Compact** toolchain to version **0.28.0**.
-- [ ] **SETUP-02**: Install and configure the **Lace Midnight Preview** browser wallet.
-- [ ] **SETUP-03**: Ensure **Docker Desktop** is installed and running for the Proof Server.
-- [ ] **SETUP-04**: Clone and install dependencies for the reference `midnight-local-dev` environment.
+### Core Logic (CORE)
 
-### Wallet & Funding (FUND)
+- [ ] **CORE-01**: Implement `src/ai-extractor.ts` using Anthropic SDK.
+- [ ] **CORE-02**: Implement `src/midnight-client.ts` for blockchain interactions.
+- [ ] **CORE-03**: Implement `src/deploy.ts` for contract deployment.
 
-- [ ] **FUND-01**: Successfully obtain the development wallet address from Lace.
-- [ ] **FUND-02**: Use the `midnight-local` funder tool to deposit development tokens into the Lace wallet.
-- [ ] **FUND-03**: Verify the updated balance within the Lace wallet interface.
+### API (API)
 
-### Smart Contract Deployment (DEPLOY)
+- [ ] **API-01**: Implement `api/server.ts` with Express and CORS.
+- [ ] **API-02**: Integrate core logic with the REST endpoints.
 
-- [ ] **DEPLOY-01**: Compile a `.compact` smart contract using the Compact compiler to generate managed artifacts (ZKIR, TypeScript bindings).
-- [ ] **DEPLOY-02**: Configure the deployment script with correct RPC endpoints for the local/preview network.
-- [ ] **DEPLOY-03**: Successfully execute the deployment and receive a contract address.
+### Configuration (CONF)
 
-### Frontend Integration (UI)
-
-- [ ] **UI-01**: Establish a connection between the web/CLI frontend and the Midnight SDK (version 3.0.0).
-- [ ] **UI-02**: Implement a function to fetch and display the current state of the deployed contract.
-- [ ] **UI-03**: Implement a button/action to trigger a private state-changing transaction (e.g., `increment`) and successfully prove/submit it.
+- [ ] **CONF-01**: Configure `package.json` with Midnight SDK ^3.0.0 and other dependencies.
+- [ ] **CONF-02**: Setup `.env.example` with RPC and AI key placeholders.
+- [ ] **CONF-03**: Setup `tsconfig.json` for Node.js TypeScript.
 
 ## Out of Scope
 
-| Feature | Reason |
-|---------|--------|
-| Ledger v6 Support | Explicitly unsupported in the latest SDK. |
-| Mainnet Deployment | Risk/complexity too high for bootcamp milestones. |
-| Multi-Contract Orchestration | Focus on single contract mastery first. |
+- **Frontend UI**: Initial focus is on the backend ecosystem.
+- **Ledger v6 Support**: Unsupported as per Midnight updates.
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 | Phase 1 | Pending |
-| SETUP-02 | Phase 1 | Pending |
-| SETUP-03 | Phase 1 | Pending |
-| SETUP-04 | Phase 1 | Pending |
-| FUND-01 | Phase 1 | Pending |
-| FUND-02 | Phase 1 | Pending |
-| FUND-03 | Phase 1 | Pending |
-| DEPLOY-01 | Phase 2 | Pending |
-| DEPLOY-02 | Phase 2 | Pending |
-| DEPLOY-03 | Phase 2 | Pending |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
+| STRUC-01 | Phase 1 | Pending |
+| STRUC-02 | Phase 1 | Pending |
+| STRUC-03 | Phase 1 | Pending |
+| CONF-01 | Phase 1 | Pending |
+| CONF-02 | Phase 1 | Pending |
+| CONF-03 | Phase 1 | Pending |
+| CORE-01 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Pending |
+| CORE-03 | Phase 2 | Pending |
+| API-01 | Phase 2 | Pending |
+| API-02 | Phase 2 | Pending |
 
 **Coverage:**
-- v1 requirements: 13 total
-- Mapped to phases: 13
+- v1 requirements: 11 total
+- Mapped to phases: 11
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-04-03*
-*Last updated: 2026-04-03 after initial definition*
+*Last updated: 2026-04-03 after ProofWork redefinition*

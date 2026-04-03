@@ -1,12 +1,12 @@
-# Midnight White Belt Project
+# ProofWork: Midnight dApp
 
 ## What This Is
 
-A developer-focused project aimed at mastering the Midnight network through the White Belt Bootcamp milestones. The project involves setting up a local Midnight development environment, creating and deploying privacy-preserving smart contracts using Compact, and integrating them with a frontend.
+A privacy-preserving dApp built on the Midnight network that integrates AI extraction capabilities. It features an Express REST API backend, a Midnight client for blockchain interactions, and smart contracts written in Compact.
 
 ## Core Value
 
-Mastery of privacy-preserving smart contract development and deployment on the Midnight network.
+Secure and private data extraction and verification on-chain using Midnight's ZK-proof system.
 
 ## Requirements
 
@@ -16,40 +16,34 @@ Mastery of privacy-preserving smart contract development and deployment on the M
 
 ### Active
 
-- [ ] **Environment Setup**: Install Midnight and run the local development environment.
-- [ ] **Wallet Configuration**: Setup the Lace Midnight Preview wallet and obtain a development address.
-- [ ] **Tooling Installation**: Install and update the Compact compiler to version 0.28.0.
-- [ ] **Smart Contract Deployment**: Configure the deploy script and successfully deploy a smart contract to the local/preview network.
-- [ ] **Wallet Funding**: Fund the development wallet using the `midnight-local` repository tools.
-- [ ] **Frontend Integration**: Orchestrate the connection between the deployed smart contract and a user interface.
+- [ ] **Infrastructure Setup**: Create `/contracts`, `/src`, and `/api` directories.
+- [ ] **Core Logic**: Implement `ai-extractor.ts`, `midnight-client.ts`, and `deploy.ts`.
+- [ ] **REST API**: Develop a simple Express API in `/api/server.ts`.
+- [ ] **Dependency Management**: Configure `package.json` with Midnight SDK 3.0.0, Anthropic SDK, and TypeScript tools.
+- [ ] **Environment Configuration**: Setup `.env.example` with required RPC and API keys.
+- [ ] **TypeScript Configuration**: Create a `tsconfig.json` for Node.js development.
 
 ### Out of Scope
 
-- **Ledger v6 Support**: Explicitly unsupported in the current Midnight SDK/tooling.
-- **Production Mainnet Deployment**: Focus is on development and bootcamp milestones (Preview/Local).
+- **Frontend UI**: Initial focus is on backend, API, and contract logic.
+- **Mainnet Deployment**: Development focused on Preview/Local tests.
 
 ## Context
 
-- **Midnight Ecosystem**: A privacy-preserving blockchain platform utilizing Zero-Knowledge Proofs (ZKPs).
-- **Core Dependencies**: 
-    - `midnight-js`: 3.0.0
-    - `wallet-sdk`: 1.0.0
-    - `Compact`: 0.28.0
-    - `Proof Server`: 7.0.0
-- **Reference Project**: `example-zkloan` for structure and development patterns.
-- **Remote Repo**: `https://github.com/Shantanu112-bd/midnight-hackathon-` for version control.
+- **Midnight SDK**: ^3.0.0 compatible.
+- **AI Integration**: Anthropic SDK.
+- **Backend Framework**: Express.js with TypeScript.
+- **Remote Repo**: `https://github.com/Shantanu112-bd/midnight-hackathon-`
 
 ## Constraints
 
-- **Technology**: Must utilize Compact for smart contracts and the latest Midnight SDKs.
-- **Compatibility**: Ensure all tools match the "Important Midnight Updates" (SDK 3.0.0, etc.).
+- **Tech Stack**: Compact, Node.js, TypeScript.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use `example-zkloan` structure | Recommended as a reference for robust Midnight applications. | — Pending |
-| GSD Coarse Granularity | Sufficient for bootcamp milestones without over-complicating the roadmap. | — Pending |
+| ProofWork Structure | Prescribed structure for API + AI + Midnight integration. | — Pending |
 
 ## Evolution
 
@@ -69,4 +63,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after initial setup*
+*Last updated: 2026-04-03 after ProofWork redefinition*
+
