@@ -1,16 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert, TrendingUp, Banknote, Home, GraduationCap, XOctagon, CheckCircle2, Clock, FileSignature } from 'lucide-react';
+import { ShieldAlert, TrendingUp, Banknote, Home, GraduationCap, XOctagon, CheckCircle2, Clock, FileSignature, UserCircle } from 'lucide-react';
+import { useApp } from '../context/DemoModeContext';
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
 import StatusBadge from '../components/StatusBadge';
+import { Link } from 'react-router-dom';
 
 export default function ManagerDashboard() {
-  const [offset, setOffset] = useState(282.7);
+  const { promises } = useApp();
+  const fulfilledCount = promises.filter((p: any) => p.status === 'FULFILLED').length;
+  const pendingCount = promises.filter((p: any) => p.status === 'PENDING').length;
+  const brokenCount = promises.filter((p: any) => p.status === 'BROKEN').length;
+  const totalCount = promises.length;
+  const calculatedScore = totalCount > 0 ? Math.round((fulfilledCount / totalCount) * 100) : 87;
+
+  const [ringAnimated, setRingAnimated] = useState(false);
+  const circumference = 2 * Math.PI * 45;
+  const strokeDashoffset = circumference - (calculatedScore / 100) * circumference;
 
   useEffect(() => {
     // Animate score ring on mount
     const timer = setTimeout(() => {
-      setOffset(36.75); // 87% score
+      setRingAnimated(true);
     }, 100);
     return () => clearTimeout(timer);
   }, []);
@@ -34,9 +45,9 @@ export default function ManagerDashboard() {
             <button className="px-6 py-3 border border-white/20 text-white rounded-full hover:bg-white/5 transition-colors font-medium">
               Export Report
             </button>
-            <button className="px-6 py-3 bg-blueAccent text-navy rounded-full hover:bg-blueAccent/90 transition-colors font-bold shadow-[0_0_20px_rgba(122,160,255,0.2)]">
+            <Link to="/" state={{ scrollTo: 'vault' }} className="px-6 py-3 bg-blueAccent text-navy rounded-full hover:bg-blueAccent/90 transition-colors font-bold shadow-[0_0_20px_rgba(122,160,255,0.2)]">
               New Promise
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -64,13 +75,13 @@ export default function ManagerDashboard() {
                     cx="50" cy="50" r="45" 
                     className="stroke-greenSuccess fill-none transition-all duration-[1.5s] ease-[cubic-bezier(0.22,1,0.36,1)]" 
                     strokeWidth="6" 
-                    strokeDasharray="282.7" 
-                    strokeDashoffset={offset} 
+                    strokeDasharray={circumference} 
+                    strokeDashoffset={ringAnimated ? strokeDashoffset : circumference} 
                     strokeLinecap="round" 
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-6xl font-bold text-white tracking-tighter">87</span>
+                  <span className="text-6xl font-bold text-white tracking-tighter">{calculatedScore}</span>
                   <span className="text-white/40 font-mono text-sm mt-1">/ 100</span>
                 </div>
               </div>
@@ -112,22 +123,22 @@ export default function ManagerDashboard() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                 <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
                   <FileSignature className="w-6 h-6 text-white/60 mb-3" />
-                  <div className="text-3xl font-bold mb-1">12</div>
+                  <div className="text-3xl font-bold mb-1">{totalCount}</div>
                   <div className="text-xs font-mono uppercase text-white/50">Total Created</div>
                 </div>
                 <div className="bg-greenSuccess/5 border border-greenSuccess/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
                   <CheckCircle2 className="w-6 h-6 text-greenSuccess mb-3" />
-                  <div className="text-3xl font-bold text-greenSuccess mb-1">10</div>
+                  <div className="text-3xl font-bold text-greenSuccess mb-1">{fulfilledCount}</div>
                   <div className="text-xs font-mono uppercase text-greenSuccess/70">Fulfilled</div>
                 </div>
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
                   <Clock className="w-6 h-6 text-amber-500 mb-3" />
-                  <div className="text-3xl font-bold text-amber-500 mb-1">1</div>
+                  <div className="text-3xl font-bold text-amber-500 mb-1">{pendingCount}</div>
                   <div className="text-xs font-mono uppercase text-amber-500/70">Pending</div>
                 </div>
                 <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
                   <XOctagon className="w-6 h-6 text-red-500 mb-3" />
-                  <div className="text-3xl font-bold text-red-500 mb-1">1</div>
+                  <div className="text-3xl font-bold text-red-500 mb-1">{brokenCount}</div>
                   <div className="text-xs font-mono uppercase text-red-500/70">Broken</div>
                 </div>
               </div>
@@ -137,23 +148,23 @@ export default function ManagerDashboard() {
                 <div className="flex items-center gap-4">
                   <div className="w-24 text-sm font-medium text-white/70">Fulfilled</div>
                   <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-greenSuccess shadow-[0_0_10px_#4dd6a0] rounded-full w-[83%]" />
+                    <div className="h-full bg-greenSuccess shadow-[0_0_10px_#4dd6a0] rounded-full transition-all duration-1000" style={{ width: `${totalCount > 0 ? (fulfilledCount/totalCount)*100 : 0}%` }} />
                   </div>
-                  <div className="w-12 text-right font-mono text-sm text-greenSuccess">83%</div>
+                  <div className="w-12 text-right font-mono text-sm text-greenSuccess">{totalCount > 0 ? Math.round((fulfilledCount/totalCount)*100) : 0}%</div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-24 text-sm font-medium text-white/70">Pending</div>
                   <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full w-[8%]" />
+                    <div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${totalCount > 0 ? (pendingCount/totalCount)*100 : 0}%` }} />
                   </div>
-                  <div className="w-12 text-right font-mono text-sm text-amber-500">8%</div>
+                  <div className="w-12 text-right font-mono text-sm text-amber-500">{totalCount > 0 ? Math.round((pendingCount/totalCount)*100) : 0}%</div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-24 text-sm font-medium text-white/70">Broken</div>
                   <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-red-500 rounded-full w-[8%]" />
+                    <div className="h-full bg-red-500 rounded-full transition-all duration-1000" style={{ width: `${totalCount > 0 ? (brokenCount/totalCount)*100 : 0}%` }} />
                   </div>
-                  <div className="w-12 text-right font-mono text-sm text-red-500">8%</div>
+                  <div className="w-12 text-right font-mono text-sm text-red-500">{totalCount > 0 ? Math.round((brokenCount/totalCount)*100) : 0}%</div>
                 </div>
               </div>
             </div>
@@ -163,26 +174,24 @@ export default function ManagerDashboard() {
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <h3 className="text-2xl font-bold">Active Promises</h3>
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-mono border border-white/10">5</div>
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-mono border border-white/10">{totalCount}</div>
                 </div>
-                <a href="#" className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
+                <Link to="/vault" className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
                   View Archive <span className="text-lg leading-none">&rarr;</span>
-                </a>
+                </Link>
               </div>
 
               <div className="space-y-4">
-                {[
-                  { title: 'Promotion to Senior Developer', icon: TrendingUp, deadline: 'Sep 30, 2025', condition: 'Complete Q3 Deliverables', empName: 'Sarah Jenkins', mgrId: 'mgr_0x1122...', empId: 'emp_0x3344...' },
-                  { title: '15% Salary Increment', icon: Banknote, deadline: 'Oct 15, 2025', condition: 'Finalize Security Audit', empName: 'Marcus Chen', mgrId: 'mgr_0x1122...', empId: 'emp_0x5566...' },
-                  { title: 'Remote Work Authorization', icon: Home, deadline: 'Nov 01, 2025', condition: '3 consecutive sprints with no bugs', empName: 'Elena Rodriguez', mgrId: 'mgr_0x1122...', empId: 'emp_0x7788...' },
-                  { title: 'Conference Budget ($3,000)', icon: GraduationCap, deadline: 'Dec 15, 2025', condition: '2 blog posts published', empName: 'David Kim', mgrId: 'mgr_0x1122...', empId: 'emp_0x99aa...' },
-                  { title: 'Role Transfer to Security', icon: ShieldAlert, deadline: 'Jan 01, 2026', condition: 'Complete OSCP certification', empName: 'Aisha Patel', mgrId: 'mgr_0x1122...', empId: 'emp_0xbbcc...' }
-                ].map((item, i) => (
-                  <div key={i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 group hover:bg-white/[0.04] hover:border-blueAccent/30 transition-all cursor-pointer">
+                {promises.slice(0, 5).map((item: any, i: number) => {
+                  
+                  const IconComp = i % 2 === 0 ? TrendingUp : GraduationCap;
+                  
+                  return (
+                  <div key={item.id || i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 group hover:bg-white/[0.04] hover:border-blueAccent/30 transition-all cursor-pointer">
                     <div className="flex items-start justify-between mb-4 gap-4">
                       <div className="flex items-center gap-4 flex-1">
                         <div className="w-12 h-12 rounded-xl bg-blueAccent/10 text-blueAccent flex items-center justify-center shrink-0">
-                          <item.icon className="w-6 h-6" />
+                          <IconComp className="w-6 h-6" />
                         </div>
                         <div>
                           <h4 className="font-bold text-lg">{item.title}</h4>
@@ -191,7 +200,7 @@ export default function ManagerDashboard() {
                           </div>
                         </div>
                       </div>
-                      <StatusBadge status="PENDING" className="shrink-0" />
+                      <StatusBadge status={item.status} className="shrink-0" />
                     </div>
                     
                     <div className="mb-5 pl-16">
@@ -205,9 +214,9 @@ export default function ManagerDashboard() {
                     <div className="relative overflow-hidden h-[48px] rounded-xl border border-white/5 ml-16 bg-black/20">
                       {/* Default state */}
                       <div className="absolute inset-0 flex items-center justify-center gap-4 font-mono text-xs text-white/40 transition-transform duration-300 group-hover:-translate-y-full px-4">
-                        <span className="truncate">{item.mgrId}</span>
+                        <span className="truncate">mgr_0x4f...892</span>
                         <div className="w-8 border-t border-dashed border-white/20" />
-                        <span className="truncate">{item.empId}</span>
+                        <span className="truncate">emp_0x1a2b...3c4d</span>
                       </div>
                       
                       {/* Hover state */}
@@ -217,12 +226,12 @@ export default function ManagerDashboard() {
                         </div>
                         <div className="flex-1 border-t border-dashed border-blueAccent/30" />
                         <div className="flex items-center gap-2 text-white font-medium text-sm">
-                          {item.empName} <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><UserCircle className="w-4 h-4 text-white/60" /></div>
+                          Jane Doe <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><UserCircle className="w-4 h-4 text-white/60" /></div>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
 

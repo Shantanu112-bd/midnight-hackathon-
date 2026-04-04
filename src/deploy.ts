@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ProofWork Deployment Script
  * Deploys the ProofWork Compact contract to Midnight devnet.
@@ -20,7 +21,7 @@ import * as path from 'path';
 
 // Midnight SDK imports
 // @ts-ignore — types may not resolve without full SDK installation
-import { deployContract } from '@midnight-ntwrk/midnight-js/contracts';
+import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 // @ts-ignore
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 // @ts-ignore
@@ -47,11 +48,9 @@ import {
 // @ts-ignore
 import * as ledger from '@midnight-ntwrk/ledger-v8';
 // @ts-ignore
-import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 // @ts-ignore
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-// @ts-ignore
-import { toHex } from '@midnight-ntwrk/midnight-js/utils';
 
 // Import the compiled ProofWork contract
 // @ts-ignore — generated code
@@ -240,7 +239,7 @@ async function deployProofWorkContract(): Promise<string> {
   // 1. Get or generate wallet seed
   let seed = process.env.WALLET_SEED;
   if (!seed) {
-    seed = toHex(Buffer.from(generateRandomSeed()));
+    seed = Buffer.from(generateRandomSeed()).toString('hex');
     console.log('⚠  No WALLET_SEED found in .env — generated fresh seed:');
     console.log(`   ${seed}`);
     console.log('   Save this seed to restore your wallet later.\n');

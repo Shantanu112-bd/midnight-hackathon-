@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Bell, ShieldCheck, Lock, Link as LinkIcon, KeyRound, Activity, AlertTriangle, Monitor, Smartphone, Plus, Download } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
 import CopyButton from '../components/CopyButton';
 import clsx from 'clsx';
-
+import ToastNotification from '../components/ToastNotification';
+import { Link } from 'react-router-dom';
 type Tab = 'profile' | 'notifications' | 'privacy' | 'security' | 'connected' | 'api' | 'activity';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
-  // Toggle states
-  const [promisesOn, setPromisesOn] = useState(true);
-  const [alertsOn, setAlertsOn] = useState(true);
-  const [dataCollection, setDataCollection] = useState(true);
-  const [profileVisible, setProfileVisible] = useState(false);
+  const [promisesOn, setPromisesOn] = useState(() => localStorage.getItem('pw_settings_promises') !== 'false');
+  const [alertsOn, setAlertsOn] = useState(() => localStorage.getItem('pw_settings_alerts') !== 'false');
+  const [dataCollection, setDataCollection] = useState(() => localStorage.getItem('pw_settings_data') !== 'false');
+  const [profileVisible, setProfileVisible] = useState(() => localStorage.getItem('pw_settings_profile') === 'true');
+  const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('pw_settings_promises', promisesOn.toString());
+    localStorage.setItem('pw_settings_alerts', alertsOn.toString());
+    localStorage.setItem('pw_settings_data', dataCollection.toString());
+    localStorage.setItem('pw_settings_profile', profileVisible.toString());
+  }, [promisesOn, alertsOn, dataCollection, profileVisible]);
+
+  const handleUpdatePassword = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   // Tabs configuration
   const tabs = [
@@ -292,7 +305,7 @@ export default function Settings() {
                     <input type="password" placeholder="Confirm New Password" className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blueAccent transition-colors text-white" />
                   </div>
                   <div>
-                    <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors text-sm">Update Password</button>
+                    <button type="button" onClick={handleUpdatePassword} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium transition-colors text-sm">Update Password</button>
                     <span className="text-xs text-white/30 ml-4">Last changed 2 months ago</span>
                   </div>
                 </div>
@@ -449,7 +462,7 @@ export default function Settings() {
               <div className="animate-fade-in-up">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-4 border-b border-white/5 gap-4">
                   <h2 className="text-2xl font-bold">Activity Log</h2>
-                  <a href="#" className="flex gap-2 items-center text-sm text-blueAccent hover:underline font-mono uppercase tracking-widest"><Download className="w-4 h-4"/> Export CSV</a>
+                  <button className="flex gap-2 items-center text-sm text-blueAccent hover:underline font-mono uppercase tracking-widest"><Download className="w-4 h-4"/> Export CSV</button>
                 </div>
 
                 <div className="flex flex-wrap gap-4 mb-8">
@@ -490,6 +503,7 @@ export default function Settings() {
 
       </main>
       
+      <ToastNotification show={showToast} message="Password updated successfully" onClose={() => setShowToast(false)} type="success" />
       <Footer />
     </div>
   );

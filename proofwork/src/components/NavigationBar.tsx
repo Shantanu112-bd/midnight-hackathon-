@@ -1,20 +1,35 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield } from 'lucide-react';
-import { useDemoMode } from '../context/DemoModeContext';
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Shield, Menu, X } from 'lucide-react';
+import { Icon } from '@iconify/react';
+import { useApp } from '../context/DemoModeContext';
 import clsx from 'clsx';
+import { WalletConnect } from './WalletConnect';
 
 interface NavigationBarProps {
   activeItem?: 'vault' | 'complaint' | 'security' | 'landing' | 'manager' | 'settings';
 }
 
 export default function NavigationBar({ activeItem = 'landing' }: NavigationBarProps) {
-  const { demoMode, toggleDemoMode } = useDemoMode();
+  const { demoMode, toggleDemoMode } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleComplaintClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    if (location.pathname === '/') {
+      const el = document.getElementById('complaint-demo');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/', { state: { scrollTo: 'complaint' } });
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6 transition-all duration-300">
-      <div className="rounded-full px-8 py-3 flex items-center justify-between max-w-5xl w-full glass shadow-2xl">
+      <div className="rounded-full px-6 md:px-8 py-3 flex items-center justify-between max-w-5xl w-full glass shadow-2xl relative">
         
         {/* Left: Logo */}
         <Link to="/" className="flex items-center gap-3 group">
@@ -30,41 +45,33 @@ export default function NavigationBar({ activeItem = 'landing' }: NavigationBarP
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
           <Link 
             to="/vault" 
-            className={clsx(
-              "transition-colors hover:text-white", 
-              activeItem === 'vault' ? "text-white" : "text-white/70"
-            )}
+            className={`transition-colors hover:text-white ${
+              location.pathname === '/vault' ? 'text-white' : 'text-white/70'
+            }`}
           >
             Promise Vault
           </Link>
-          <a 
-            href="/#complaint-demo" 
-            onClick={(e) => {
-              if (window.location.pathname !== '/') {
-                e.preventDefault();
-                navigate('/#complaint-demo');
-              }
-            }}
-            className={clsx(
-              "transition-colors hover:text-white", 
-              activeItem === 'complaint' ? "text-white" : "text-white/70"
-            )}
+          <button 
+            type="button"
+            onClick={handleComplaintClick}
+            className={`transition-colors hover:text-white ${
+              activeItem === 'complaint' ? 'text-white' : 'text-white/70'
+            }`}
           >
             Anonymous Reporting
-          </a>
+          </button>
           <Link 
             to="/certificate" 
-            className={clsx(
-              "transition-colors hover:text-white", 
-              activeItem === 'security' ? "text-white" : "text-white/70"
-            )}
+            className={`transition-colors hover:text-white ${
+              location.pathname === '/certificate' ? 'text-white' : 'text-white/70'
+            }`}
           >
             Security
           </Link>
         </div>
         
         {/* Right: Actions */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
           <div className="hidden lg:flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-greenSuccess animate-pulse" />
             <span className="font-mono text-[10px] uppercase text-white/50 tracking-wider">
@@ -72,40 +79,62 @@ export default function NavigationBar({ activeItem = 'landing' }: NavigationBarP
             </span>
           </div>
 
-          <button 
+          <button
             onClick={toggleDemoMode}
-            className={clsx(
-              "hidden md:block px-3 py-1 rounded-full font-mono text-[10px] uppercase font-bold tracking-widest border transition-all",
-              demoMode ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10"
-            )}
+            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all border ${
+              demoMode 
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
+                : 'bg-white/5 border-white/10 text-white/40'
+            }`}
           >
-            {demoMode ? "Demo Mode ON" : "Demo Mode OFF"}
+            <div className={`w-1.5 h-1.5 rounded-full ${demoMode ? 'bg-amber-500' : 'bg-white/30'}`} />
+            {demoMode ? 'Demo Mode ON' : 'Live Mode'}
           </button>
           
-          <Link 
-            to="/vault"
-            className="hidden md:block px-6 py-2 bg-white text-navy font-semibold rounded-full hover:bg-limeAccent hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(204,255,0,0.4)]"
-          >
-            Launch Vault
-          </Link>
-        </div>
-        
-      </div>
+          <div className="hidden md:block">
+            <WalletConnect />
+          </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-navy/90 backdrop-blur-lg border-t border-white/10 flex justify-around items-center p-4 z-50">
-        <Link to="/vault" className={clsx("flex flex-col items-center gap-1", activeItem === 'vault' ? "text-white" : "text-white/50")}>
-          <span className="text-[10px] uppercase font-bold">Vault</span>
-        </Link>
-        <a href="/#complaint-demo" onClick={(e) => { if (window.location.pathname !== '/') { e.preventDefault(); navigate('/#complaint-demo'); } }} className={clsx("flex flex-col items-center gap-1", activeItem === 'complaint' ? "text-white" : "text-white/50")}>
-          <span className="text-[10px] uppercase font-bold">Report</span>
-        </a>
-        <Link to="/certificate" className={clsx("flex flex-col items-center gap-1", activeItem === 'security' ? "text-white" : "text-white/50")}>
-          <span className="text-[10px] uppercase font-bold">Security</span>
-        </Link>
-        <button onClick={toggleDemoMode} className={clsx("flex flex-col items-center gap-1", demoMode ? "text-amber-500" : "text-white/50")}>
-          <span className="text-[10px] uppercase font-bold text-center">Demo<br/>{demoMode ? 'ON' : 'OFF'}</span>
-        </button>
+          {/* Mobile hamburger toggle */}
+          <button
+            className="md:hidden text-white ml-2 flex items-center justify-center w-8 h-8 rounded-full border border-white/10"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Dropdown menu when open */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-4 right-4 mt-2 glass rounded-2xl p-4 flex flex-col gap-3 md:hidden">
+            <Link to="/vault" onClick={() => setMobileMenuOpen(false)} 
+              className="text-sm font-medium py-3 px-4 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5">
+              Promise Vault
+            </Link>
+            <button onClick={handleComplaintClick}
+              className="text-left text-sm font-medium py-3 px-4 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5">
+              Anonymous Reporting
+            </button>
+            <Link to="/manager" onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium py-3 px-4 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5">
+              Manager Dashboard
+            </Link>
+            <Link to="/settings" onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium py-3 px-4 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5">
+              Settings
+            </Link>
+            
+            <div className="h-px bg-white/10 my-1" />
+            
+            <button onClick={() => { toggleDemoMode(); setMobileMenuOpen(false); }}
+              className="text-left text-sm font-medium py-3 px-4 hover:bg-white/5 rounded-xl flex items-center justify-between">
+              <span className={demoMode ? "text-amber-500" : "text-white/50"}>Demo Mode</span>
+              <div className={`w-8 h-4 rounded-full relative transition-colors ${demoMode ? 'bg-amber-500' : 'bg-white/20'}`}>
+                <div className={`w-4 h-4 rounded-full bg-white absolute top-0 transition-transform ${demoMode ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

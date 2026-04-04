@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Lock, ArrowRight, Signature, EyeOff, BarChart3, ShieldCheck, 
   Loader2, CheckCircle2, Ghost, AlertTriangle, ShieldOff, 
@@ -11,7 +11,8 @@ import Footer from '../components/Footer';
 import CopyButton from '../components/CopyButton';
 import ToastNotification from '../components/ToastNotification';
 import StatusBadge from '../components/StatusBadge';
-import { useApi } from '../hooks/useApi';
+import { extractAndCreatePromise, fileComplaint } from '../hooks/useApi';
+import { useApp } from '../context/DemoModeContext';
 import clsx from 'clsx';
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
@@ -82,7 +83,19 @@ export default function Landing() {
     setShowOnboarding(false);
   };
 
-  const { extractPromiseData, sealPromise, submitComplaint } = useApi();
+  const { addPromise, addComplaint, complaints, wallet } = useApp();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (wallet.isConnected) {
+      navigate('/vault');
+    }
+  }, [wallet.isConnected, navigate]);
+  
+  const scrollToSection = (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
+    e.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
   
   // Vault Demo State
   const [vaultStep, setVaultStep] = useState<1 | 2 | 3>(1);
@@ -93,6 +106,7 @@ export default function Landing() {
   const [txHash, setTxHash] = useState('');
   const [toastData, setToastData] = useState<{show: boolean, msg: string, type: 'success' | 'info' | 'error'}>({show: false, msg: '', type: 'success'});
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [sealing, setSealing] = useState(false);
 
   // Complaint Demo State
   const [complaintSubmitted, setComplaintSubmitted] = useState(false);
@@ -100,51 +114,55 @@ export default function Landing() {
   const [complaintManagerId, setComplaintManagerId] = useState('');
   const [complaintLoading, setComplaintLoading] = useState(false);
 
-  const handleExtractPromise = async () => {
+  const handleSeal = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     if (!transcript) return;
     setLoadingPromise(true);
-    const res = await extractPromiseData(transcript, managerId || 'mgr_demo');
-    if (!res.success) {
-      setToastData({ show: true, msg: res.error || 'Failed to extract promise', type: 'error' });
+    setToastData({ show: true, msg: 'Extracting and sealing on Midnight...', type: 'info' });
+    
+    try {
+      const result = await extractAndCreatePromise(
+        transcript,
+        managerId || 'mgr_unknown',
+        wallet.address || 'emp_demo_user'
+      );
+      
+      const newPromise = addPromise({
+        title: result.extractedData?.promise?.description || 'Sealed Promise',
+        condition: result.extractedData?.promise?.condition || '',
+        deadline: result.extractedData?.promise?.deadline || 'TBD',
+        hash: result.contractTxId
+      });
+      setExtractedPromise(result.extractedData?.promise);
+      setTxHash(result.contractTxId);
+      setVaultStep(3);
+      setToastData({ show: true, msg: `✓ Promise sealed`, type: 'success' });
+    } catch (err: any) {
+      setToastData({ show: true, msg: err.message || 'Failed to seal', type: 'error' });
+    } finally {
       setLoadingPromise(false);
-      return;
     }
-    if (res.extractedData?.hasPromise) {
-      setExtractedPromise(res.extractedData.promise);
-      setTxHash(res.contractTxId || '');
-      setIsDemoMode(res.isDemo || false);
-      setVaultStep(2);
-    } else {
-      setToastData({ show: true, msg: 'No explicit promise found in transcript.', type: 'info' });
-    }
-    setLoadingPromise(false);
   };
 
-  const handleSealPromise = async () => {
-    setToastData({ show: true, msg: 'Sealing on blockchain...', type: 'info' });
-    const res = await sealPromise(transcript, managerId || 'mgr_demo');
-    if (!res.success) {
-      setToastData({ show: true, msg: res.error || 'Failed to seal promise', type: 'error' });
-      return;
-    }
-    setTxHash(res.txId || '');
-    setVaultStep(3);
-    setToastData({ show: true, msg: `✓ Promise sealed · TX: ${(res.txId || '').substring(0,10)}...`, type: 'success' });
-  };
-
-  const handleFileComplaint = async () => {
+  const handleFileComplaint = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     if (!complaintText) return;
     setComplaintLoading(true);
-    const res = await submitComplaint(complaintText, 'general', complaintManagerId || 'mgr_demo');
-    if (!res.success) {
-      setToastData({ show: true, msg: res.error || 'Failed to file report', type: 'error' });
+    try {
+      const res = await fileComplaint(complaintText, 'general', complaintManagerId || 'mgr_demo');
+      addComplaint({
+        category: 'Broken Promise',
+        managerId: complaintManagerId || 'mgr_demo',
+        description: complaintText
+      });
+      setTxHash(res.txId || '');
+      setComplaintSubmitted(true);
+      setToastData({ show: true, msg: `Report filed`, type: 'success' });
+    } catch(err: any) {
+      setToastData({ show: true, msg: err.message || 'Failed to file report', type: 'error' });
+    } finally {
       setComplaintLoading(false);
-      return;
     }
-    setTxHash(res.txId || '');
-    setComplaintSubmitted(true);
-    setComplaintLoading(false);
-    setToastData({ show: true, msg: `Report filed ${res.isDemo ? '(Demo)' : ''}`, type: 'success' });
   };
 
   return (
@@ -163,7 +181,7 @@ export default function Landing() {
             Built on Midnight Network
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-bold tracking-[-0.06em] leading-[0.9] mb-8">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-[-0.06em] leading-[0.9] mb-8">
             Workplace Truth,<br />
             <span className="bg-gradient-to-r from-white to-limeAccent bg-clip-text text-transparent italic">Proven.</span>
           </h1>
@@ -172,22 +190,22 @@ export default function Landing() {
             The privacy-first accountability protocol. Seal professional promises and file anonymous reports powered by Zero-Knowledge Proofs.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <Link 
               to="/vault"
-              className="bg-blueAccent text-navy font-bold px-8 py-4 rounded-full flex items-center gap-3 transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(122,160,255,0.4)]"
+              className="w-full sm:w-auto bg-blueAccent text-navy font-bold px-8 py-4 rounded-full flex items-center justify-center gap-3 transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(122,160,255,0.4)]"
             >
               Start Recording Promises <ArrowRight className="w-5 h-5" />
             </Link>
-            <a 
-              href="#vault-demo"
-              className="border border-white/20 text-white font-medium px-8 py-4 rounded-full hover:bg-white/5 transition-all"
+            <button 
+              onClick={(e) => scrollToSection(e, 'vault-demo')}
+              className="w-full sm:w-auto border border-white/20 text-white font-medium px-8 py-4 rounded-full hover:bg-white/5 transition-all text-center"
             >
               See How It Works
-            </a>
+            </button>
           </div>
 
-          <div className="mt-24 flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale group hover:grayscale-0 transition-all duration-500">
+          <div className="mt-24 grid grid-cols-2 md:flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale group hover:grayscale-0 transition-all duration-500">
             {['Midnight Network Secured', 'Zero-Knowledge Verified', 'Enterprise Ready'].map((badge, i) => (
               <div key={i} className="flex items-center gap-2 font-mono text-[11px] uppercase">
                 <Shield className="w-4 h-4" />
@@ -327,17 +345,31 @@ export default function Landing() {
                     />
                     <input 
                       type="text" 
-                      value="Me (emp_0x1a2b...)"
+                      value={wallet.isConnected 
+                        ? `${wallet.address?.slice(0,6)}...${wallet.address?.slice(-4)}` 
+                        : 'emp_0x1a2b...3c4d (connect wallet)'
+                      }
                       disabled
-                      className="w-full bg-white/5 border border-white/5 rounded-full px-6 py-4 text-white/30 cursor-not-allowed"
+                      className={`w-full rounded-full px-6 py-4 cursor-not-allowed ${
+                        wallet.isConnected 
+                          ? 'bg-greenSuccess/5 border border-greenSuccess/20 text-greenSuccess' 
+                          : 'bg-white/[0.02] border border-white/5 text-white/30'
+                      }`}
                     />
                   </div>
+                  {!wallet.isConnected && (
+                    <p className="text-xs text-amber-500/70 font-mono mt-2">
+                      ⚠ Connect Lace wallet to seal promises on-chain. 
+                      Demo mode works without wallet.
+                    </p>
+                  )}
                   <button 
-                    onClick={handleExtractPromise}
+                    type="button"
+                    onClick={handleSeal}
                     disabled={!transcript || loadingPromise}
-                    className="w-full bg-blueAccent text-navy font-bold py-5 rounded-full hover:bg-blueAccent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-blueAccent text-navy font-bold py-5 rounded-full hover:bg-blueAccent/90 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none flex items-center justify-center gap-2"
                   >
-                    {loadingPromise ? <Loader2 className="w-5 h-5 animate-spin" /> : "Extract Promise with AI"}
+                    {loadingPromise ? <><Loader2 className="w-5 h-5 animate-spin" /> Extracting & Sealing...</> : "Extract & Seal Promise"}
                   </button>
                   <p className="text-center text-white/30 text-xs font-mono">
                     Analysis happens entirely client-side/secure enclave. Transcript is never retained.
@@ -368,12 +400,15 @@ export default function Landing() {
 
                   <div className="flex gap-4">
                     <button 
-                      onClick={handleSealPromise}
-                      className="flex-1 bg-blueAccent text-navy font-bold py-4 rounded-full hover:bg-blueAccent/90 transition-all"
+                      type="button"
+                      onClick={handleSeal}
+                      disabled={sealing}
+                      className="flex-1 bg-blueAccent text-navy font-bold py-4 rounded-full hover:bg-blueAccent/90 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none flex items-center justify-center gap-2"
                     >
-                      Seal on Midnight ✓
+                      {sealing ? <><Loader2 className="w-5 h-5 animate-spin" /> Sealing on Midnight...</> : "Seal on Midnight ✓"}
                     </button>
                     <button 
+                      type="button"
                       onClick={() => setVaultStep(1)}
                       className="px-8 py-4 border border-white/20 rounded-full hover:bg-white/5 transition-all font-medium"
                     >
@@ -578,12 +613,13 @@ export default function Landing() {
                 </div>
 
                 <button 
+                  type="button"
                   onClick={handleFileComplaint}
                   disabled={!complaintText || complaintLoading}
-                  className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-5 rounded-full flex justify-center items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-5 rounded-full flex justify-center items-center gap-3 transition-colors disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none"
                 >
                   {complaintLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldOff className="w-5 h-5" />}
-                  Submit Anonymously — Zero Knowledge Protected
+                  {complaintLoading ? "Submitting via ZK proof..." : "Submit Anonymously — Zero Knowledge Protected"}
                 </button>
               </div>
             </div>
@@ -606,10 +642,10 @@ export default function Landing() {
                 </div>
 
                 <div className="flex justify-between items-end mb-2">
-                  <span className="font-mono text-sm tracking-widest text-amber-500 uppercase font-bold">2 of 3 Reports</span>
+                  <span className="font-mono text-sm tracking-widest text-amber-500 uppercase font-bold">{complaints?.length || 2} of 3 Reports</span>
                 </div>
                 <div className="w-full bg-white/5 h-2 rounded-full mb-8 overflow-hidden relative">
-                  <div className="absolute top-0 left-0 h-full bg-amber-500 w-[66%]" />
+                  <div className="absolute top-0 left-0 h-full bg-amber-500 transition-all duration-500" style={{ width: `${Math.min(((complaints?.length || 2) / 3) * 100, 100)}%` }} />
                 </div>
 
                 <p className="text-white/60 text-sm leading-relaxed mb-10">
@@ -633,9 +669,11 @@ export default function Landing() {
           </div>
         ) : (
           <div className="max-w-2xl mx-auto text-center animate-fade-in-up py-16">
-            <div className="w-24 h-24 bg-greenSuccess/20 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckCircle className="w-12 h-12 text-greenSuccess" />
-            </div>
+            <svg viewBox="0 0 52 52" className="w-24 h-24 mx-auto mb-8">
+              <circle cx="26" cy="26" r="25" fill="none" stroke="#4dd6a0" strokeWidth="2" opacity="0.2"/>
+              <path fill="none" stroke="#4dd6a0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
+                d="M14 27l8 8 16-16" className="animate-draw-check"/>
+            </svg>
             <h2 className="text-4xl font-bold mb-10">Report Filed Anonymously</h2>
             
             <div className="glass p-8 rounded-[2rem] border-purpleAccent/30 mb-10 text-left relative overflow-hidden">

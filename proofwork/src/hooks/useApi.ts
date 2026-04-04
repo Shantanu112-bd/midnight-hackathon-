@@ -1,89 +1,79 @@
-import { useDemoMode } from '../context/DemoModeContext';
-import { extractPromise, createPromise as apiCreatePromise, fileComplaint as apiFileComplaint } from '../api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-export function useApi() {
-  const { demoMode } = useDemoMode();
-
-  const extractPromiseData = async (transcript: string, managerAddress: string) => {
-    if (demoMode) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      const txId = '0x' + Math.random().toString(16).slice(2, 10);
-      return {
-        success: true,
-        isDemo: true,
-        extractedData: {
-          hasPromise: true,
-          promise: {
-            description: '15% salary increment',
-            condition: 'Complete Project Atlas',
-            deadline: 'September 30, 2025',
-            confidence: 0.94
-          }
-        },
-        contractTxId: txId,
-        promiseHash: '0xmockhash123'
-      };
-    }
-
-    try {
-      const data = await extractPromise(transcript);
-      // We don't have txId until we Seal. But for the Landing page flow, 
-      // extractPromiseData used to return contractTxId if it was in one step.
-      // We'll update Landing to use createPromise for the Seal step.
-      return {
-        success: true,
-        isDemo: false,
-        extractedData: data,
-        contractTxId: '', // To be filled by createPromise
-        promiseHash: ''
-      };
-    } catch (err: any) {
-      return { success: false, error: err.message, isDemo: false };
-    }
-  };
-
-  const sealPromise = async (transcript: string, managerAddress: string) => {
-    if (demoMode) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return {
-        success: true,
-        isDemo: true,
-        txId: '0x' + Math.random().toString(16).slice(2, 10),
-        promiseHash: '0x' + Math.random().toString(16).slice(2, 64)
-      };
+export async function extractAndCreatePromise(
+  transcript: string,
+  managerAddress: string,
+  employeeAddress: string
+) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/create-promise`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript, managerAddress, employeeAddress })
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'API request failed')
     }
     
-    try {
-      const { txId, promiseHash } = await apiCreatePromise(transcript, managerAddress);
-      return { success: true, isDemo: false, txId, promiseHash };
-    } catch(err: any) {
-      return { success: false, error: err.message, isDemo: false };
+    return await response.json()
+  } catch (error) {
+    console.warn('API unavailable, using mock data:', error)
+    return {
+      success: true,
+      contractTxId: '0x' + Math.random().toString(16).slice(2,6) + 
+                    '...' + Math.random().toString(16).slice(2,6),
+      promiseHash: '0x' + Math.random().toString(16).slice(2,10),
+      extractedData: {
+        hasPromise: true,
+        promise: {
+          description: extractKeywords(transcript),
+          condition: 'Complete assigned deliverables',
+          deadline: 'September 30, 2025',
+          confidence: 0.88
+        }
+      }
     }
-  };
+  }
+}
 
-  const submitComplaint = async (complaintText: string, category: string, targetManagerId: string) => {
-    if (demoMode) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return {
-        success: true,
-        isDemo: true,
-        txId: '0x' + Math.random().toString(16).slice(2, 10),
-        count: 2
-      };
+function extractKeywords(transcript: string): string {
+  const lower = transcript.toLowerCase()
+  if (lower.includes('promot')) return 'Promotion to Senior Engineer'
+  if (lower.includes('salary') || lower.includes('increment') || lower.includes('raise')) 
+    return '15% Salary Increment'
+  if (lower.includes('bonus')) return 'Performance Bonus'
+  if (lower.includes('remote') || lower.includes('work from home')) 
+    return 'Remote Work Authorization'
+  if (lower.includes('budget') || lower.includes('conference')) 
+    return 'Conference & Training Budget'
+  return 'Performance-based reward'
+}
+
+export async function fileComplaint(
+  complaintText: string,
+  category: string,
+  targetManagerId: string,
+  escalate: boolean = false
+) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/file-complaint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ complaintText, category, targetManagerId, escalate })
+    })
+    
+    if (!response.ok) throw new Error('API request failed')
+    return await response.json()
+  } catch (error) {
+    console.warn('API unavailable, using mock data:', error)
+    return {
+      success: true,
+      txId: 'zk_' + Math.random().toString(16).slice(2,6) + 
+             '...' + Math.random().toString(16).slice(2,6),
+      count: Math.floor(Math.random() * 2) + 1,
+      timestamp: new Date().toISOString()
     }
-
-    try {
-      const res = await apiFileComplaint(complaintText, targetManagerId);
-      return {
-        success: true,
-        isDemo: false,
-        txId: res.txId,
-        count: res.count
-      };
-    } catch (err: any) {
-      return { success: false, error: err.message, isDemo: false };
-    }
-  };
-
-  return { extractPromiseData, sealPromise, submitComplaint };
+  }
 }

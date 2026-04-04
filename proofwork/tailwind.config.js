@@ -48,6 +48,10 @@ export default {
         'fade-in-up': {
           '0%': { opacity: '0', transform: 'translateY(20px) scale(0.98)' },
           '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'slide-up': {
+          from: { transform: 'translateY(100px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' }
         }
       },
       animation: {
@@ -55,6 +59,7 @@ export default {
         'stars-anim': 'stars-anim 150s linear infinite',
         'stars-anim-mid': 'stars-anim-mid 100s linear infinite',
         'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+        'slide-up': 'slide-up 0.3s ease-out forwards'
       }
     },
   },

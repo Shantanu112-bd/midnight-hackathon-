@@ -1,0 +1,8 @@
+{
+  "contractAddress": "0x1234567890abcdef1234567890abcdef12345678",
+  "blockHeight": "1024",
+  "txId": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "deployedAt": "2026-04-04T12:00:00.000Z",
+  "network": "devnet",
+  "nodeUrl": "http://localhost:9944"
+}

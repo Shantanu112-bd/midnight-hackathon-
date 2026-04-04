@@ -35,3 +35,35 @@
   1560px 210px #FFF, 890px 1800px #FFF, 210px 1100px #FFF,
   1340px 760px #FFF, 670px 430px #FFF, 1100px 1300px #FFF, 340px 1600px #FFF;
 }
+
+@media print {
+  nav, footer, .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  #certificate-card { 
+    border: 2px solid #333 !important;
+    border-radius: 8px !important;
+    padding: 2rem !important;
+  }
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes drawCheck {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-draw-check {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawCheck 0.6s ease-out 0.2s forwards;
+}
