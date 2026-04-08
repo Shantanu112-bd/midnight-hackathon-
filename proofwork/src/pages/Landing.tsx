@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Lock, ArrowRight, Signature, EyeOff, BarChart3, ShieldCheck, 
   Loader2, CheckCircle2, Ghost, AlertTriangle, ShieldOff, 
@@ -85,12 +85,24 @@ export default function Landing() {
 
   const { addPromise, addComplaint, complaints, wallet } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (wallet.isConnected) {
-      navigate('/vault');
-    }
-  }, [wallet.isConnected, navigate]);
+    // Handle scrolling when coming from other pages (via state or hash)
+    const scrollToTarget = () => {
+      let targetId = null;
+      if (location.state?.scrollTo === 'complaint') targetId = 'complaint-demo';
+      else if (location.hash === '#vault-demo') targetId = 'vault-demo';
+      else if (location.hash === '#complaint-demo') targetId = 'complaint-demo';
+
+      if (targetId) {
+        setTimeout(() => {
+          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+    scrollToTarget();
+  }, [location]);
   
   const scrollToSection = (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
     e.preventDefault();
@@ -446,7 +458,12 @@ export default function Landing() {
                     >
                       Generate ZK Proof
                     </Link>
-                    <a href="#" className="px-8 py-4 text-white/60 hover:text-white transition-colors flex items-center gap-2">
+                    <a 
+                      href={`https://explorer.testnet.midnight.network/transaction/${txHash || '0x4f...8a'}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-8 py-4 text-white/60 hover:text-white transition-colors flex items-center gap-2"
+                    >
                       View on Explorer <ArrowRight className="w-4 h-4" />
                     </a>
                   </div>

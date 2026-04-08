@@ -3,3 +3,4 @@ node_modules/
 proofwork/node_modules/
 proofwork/dist/
 .DS_Store
+dist/

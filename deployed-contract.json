@@ -1,8 +1,8 @@
 {
-  "contractAddress": "0x1234567890abcdef1234567890abcdef12345678",
-  "blockHeight": "1024",
-  "txId": "0xabcdef1234567890abcdef1234567890abcdef12",
-  "deployedAt": "2026-04-04T12:00:00.000Z",
-  "network": "devnet",
-  "nodeUrl": "http://localhost:9944"
+  "contractAddress": "c6f73145c35a989295bd04f8e8f8ecd833a85202f9d5daeb2aaf831117ac5a2f",
+  "blockHeight": "197815",
+  "txId": "00c2e6ff3a048083cf23356ad3bb98a00afb32f524f18e6a9a517380a6a0c5e29f",
+  "deployedAt": "2026-04-07T18:49:39.419Z",
+  "network": "preview",
+  "nodeUrl": "https://rpc.preview.midnight.network"
 }

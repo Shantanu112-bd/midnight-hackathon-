@@ -72,10 +72,10 @@ export function useWallet() {
   const connectWallet = useCallback(async () => {
     const w = window as any;
     const hasMidnightStr = typeof w.midnight !== 'undefined';
-    
+
     // Find the Lace provider. It might be named mnLace, lace, or even a UUID injected by the extension.
     let laceProvider = w.midnight?.mnLace || w.midnight?.lace;
-    
+
     // Fallback: If midnight exists but not under standard names, just try to grab the first object in window.midnight
     if (!laceProvider && hasMidnightStr && typeof w.midnight === 'object') {
       const keys = Object.keys(w.midnight);
@@ -83,7 +83,7 @@ export function useWallet() {
         laceProvider = w.midnight[keys[0]];
       }
     }
-    
+
     const hasMnLace = !!laceProvider;
     const hasCardano = typeof w.cardano !== 'undefined';
 
