@@ -5,6 +5,7 @@
 <div align="center">
 
 [![Demo Video](https://img.shields.io/badge/🎥_Watch-Demo_Video-blue?style=for-the-badge&logo=loom)](https://www.loom.com/share/841dce01bdbb496b81cdb5f97d497630)
+[![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-orange?style=for-the-badge&logo=slideshare)](https://www.slideshare.net/slideshow/proofwork-workplace-truth-shielded-by-zero-knowledge-pptx/286955219)
 [![Built with Midnight](https://img.shields.io/badge/Built%20with-Midnight-purple?style=for-the-badge)](https://midnight.network)
 [![ZK-Proof Verified](https://img.shields.io/badge/ZK--Proof-Verified-green?style=for-the-badge)](https://docs.midnight.network)
 
