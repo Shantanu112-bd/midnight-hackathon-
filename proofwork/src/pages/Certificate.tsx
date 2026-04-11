@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BadgeCheck, Users, ExternalLink, Download, Link as LinkIcon, ShieldCheck, Check, EyeOff, X } from 'lucide-react';
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
@@ -6,16 +7,39 @@ import CopyButton from '../components/CopyButton';
 
 export default function Certificate() {
   const [mounted, setMounted] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  
+  const txHash = location.state?.txHash || searchParams.get('tx');
+  const timestamp = location.state?.timestamp || searchParams.get('ts');
+
+  const displayZkp = txHash || 'zkp_7f3a9c2b1e4d8f6a';
+  const displayHash = txHash ? `${txHash.slice(0, 10)}...${txHash.slice(-4)}` : '0x8f3a9c...2b1c';
+  const displayDate = timestamp ? new Date(timestamp).toUTCString() : '2025-05-14 14:22:18 UTC';
+
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}?tx=${displayZkp}&ts=${encodeURIComponent(timestamp || '')}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownload = () => {
+    window.print();
+  };
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   return (
-    <div className="min-h-screen bg-navy flex flex-col pt-32">
-      <NavigationBar activeItem="security" />
+    <div className="min-h-screen bg-navy flex flex-col pt-32 print:pt-0 print:bg-black">
+      <div className="print:hidden">
+        <NavigationBar activeItem="security" />
+      </div>
 
-      <main className={`flex-1 flex flex-col items-center justify-center py-32 px-6 w-full max-w-4xl mx-auto transition-opacity duration-1000 ${mounted ? 'opacity-100 animate-fade-in-up' : 'opacity-0'}`}>
+      <main className={`flex-1 flex flex-col items-center justify-center py-32 print:py-10 px-6 w-full max-w-4xl mx-auto transition-opacity duration-1000 ${mounted ? 'opacity-100 animate-fade-in-up' : 'opacity-0'}`}>
         
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-12">
@@ -50,22 +74,22 @@ export default function Certificate() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 border-b border-white/5 hover:bg-white/[0.02] px-3 -mx-3 rounded-lg transition-colors gap-2">
               <span className="text-white/40 tracking-widest font-bold">CERTIFICATE ID</span>
               <div className="flex items-center gap-3">
-                <span className="text-purpleAccent font-bold">zkp_7f3a9c2b1e4d8f6a</span>
-                <CopyButton text="zkp_7f3a9c2b1e4d8f6a" />
+                <span className="text-purpleAccent font-bold truncate max-w-[200px] sm:max-w-none">{displayZkp}</span>
+                <CopyButton text={displayZkp} />
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 border-b border-white/5 hover:bg-white/[0.02] px-3 -mx-3 rounded-lg transition-colors gap-2">
               <span className="text-white/40 tracking-widest font-bold">PROMISE HASH</span>
               <div className="flex items-center gap-3">
-                <span className="text-white/80">0x8f3a9c...2b1c</span>
-                <CopyButton text="0x8f3a9c2b1e4d8f6a" />
+                <span className="text-white/80">{displayHash}</span>
+                <CopyButton text={txHash || '0x8f3a9c2b1e4d8f6a'} />
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 border-b border-white/5 hover:bg-white/[0.02] px-3 -mx-3 rounded-lg transition-colors gap-2">
               <span className="text-white/40 tracking-widest font-bold">ISSUED</span>
-              <span className="text-white/80">2025-05-14 14:22:18 UTC</span>
+              <span className="text-white/80">{displayDate}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 border-b border-white/5 hover:bg-white/[0.02] px-3 -mx-3 rounded-lg transition-colors gap-2">
@@ -78,7 +102,7 @@ export default function Certificate() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 border-b border-white/5 hover:bg-white/[0.02] px-3 -mx-3 rounded-lg transition-colors gap-2">
               <span className="text-white/40 tracking-widest font-bold">NETWORK</span>
               <div className="flex items-center gap-2 text-white/80">
-                <div className="w-2 h-2 rounded-full bg-limeAccent" /> Midnight Devnet
+                <div className="w-2 h-2 rounded-full bg-limeAccent" /> Midnight Preview Network
               </div>
             </div>
 
@@ -138,23 +162,37 @@ export default function Certificate() {
 
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto">
-          <button className="w-full sm:w-auto bg-blueAccent text-navy font-bold px-8 py-4 rounded-full flex items-center justify-center gap-2 hover:bg-blueAccent/90 transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(122,160,255,0.4)]">
+        {/* Actions - hide in print mode */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto print:hidden">
+          <button 
+            onClick={handleDownload}
+            className="w-full sm:w-auto bg-blueAccent text-navy font-bold px-8 py-4 rounded-full flex items-center justify-center gap-2 hover:bg-blueAccent/90 transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(122,160,255,0.4)]"
+          >
             <Download className="w-5 h-5" /> Download Certificate PDF
           </button>
-          <button className="w-full sm:w-auto px-8 py-4 border border-white/20 rounded-full flex items-center justify-center gap-2 hover:bg-white/5 transition-all font-medium">
-            <LinkIcon className="w-5 h-5" /> Copy Shareable Link
+          <button 
+            onClick={handleCopyLink}
+            className="w-full sm:w-auto px-8 py-4 border border-white/20 rounded-full flex items-center justify-center gap-2 hover:bg-white/5 transition-all font-medium"
+          >
+            {copiedLink ? <Check className="w-5 h-5 text-greenSuccess" /> : <LinkIcon className="w-5 h-5" />}
+            {copiedLink ? 'Link Copied!' : 'Copy Shareable Link'}
           </button>
         </div>
         
-        <a href="#" className="mt-8 font-mono uppercase text-xs tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2">
+        <a 
+          href={`https://explorer.preview.midnight.network/transaction/${displayZkp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 font-mono uppercase text-xs tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2 print:hidden"
+        >
           Verifiable on Midnight Explorer <ExternalLink className="w-3 h-3" />
         </a>
 
       </main>
 
-      <Footer />
+      <div className="print:hidden">
+        <Footer />
+      </div>
     </div>
   );
 }

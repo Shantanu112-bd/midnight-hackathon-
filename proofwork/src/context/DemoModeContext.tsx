@@ -1,11 +1,34 @@
 import React, { createContext, useContext, useState } from 'react';
-import { useWallet } from '../hooks/useWallet';
+import { useMidnightWallet } from '../hooks/useMidnightWallet';
 
-const AppContext = createContext<any>(null);
+export interface AppContextType {
+  demoMode: boolean
+  toggleDemoMode: () => void
+  promises: any[]
+  addPromise: (data: any) => Promise<any>
+  updatePromise: (id: string, updates: any) => void
+  complaints: any[]
+  setComplaints: React.Dispatch<React.SetStateAction<any[]>>
+  addComplaint: (complaint: any) => any
+  wallet: {
+    isConnected: boolean
+    isConnecting: boolean
+    address: string | null
+    balance: string | null
+    status: string
+    error: string | null
+    isInstalled: boolean
+    providers: any | null
+    connect: () => Promise<void>
+    disconnect: () => void
+  }
+}
+
+const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [demoMode, setDemoMode] = useState(true);
-  const wallet = useWallet();
+  const [demoMode, setDemoMode] = useState(false);
+  const walletHook = useMidnightWallet();
   
   const defaultPromises = [
     {
@@ -95,21 +118,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch { return defaultComplaints; }
   });
 
-  const addPromise = (newPromise: any) => {
-    const promise = {
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
+  const addPromise = async (data: any) => {
+    const id = Date.now().toString();
+    const mockHash = '0x' + Math.random().toString(16).slice(2,6) + '...' + Math.random().toString(16).slice(2,6);
+    
+    const newPromise = {
+      id,
+      title: data.title || 'Sealed Promise',
+      condition: data.condition || '',
+      deadline: data.deadline || 'TBD',
       status: 'PENDING',
-      hash: '0x' + Math.random().toString(16).slice(2,6) + '...' + Math.random().toString(16).slice(2,6),
-      managerAddress: 'mgr_0x4f...892',
-      ...newPromise
+      hash: mockHash,
+      managerAddress: data.managerAddress || data.managerId || 'mgr_0x4f...892',
+      createdAt: new Date().toISOString(),
+      onChain: false,
+      ...data
     };
+    
     setPromises((prev: any[]) => {
-      const updated = [promise, ...prev];
+      const updated = [newPromise, ...prev];
       localStorage.setItem('proofwork_promises', JSON.stringify(updated));
       return updated;
     });
-    return promise;
+
+    return newPromise;
   };
 
   const updatePromise = (id: string, updates: any) => {
@@ -123,10 +155,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addComplaint = (complaint: any) => {
     const newComplaint = {
       id: 'c' + Date.now().toString(),
-      zkReceiptId: 'zk_' + Math.random().toString(16).slice(2,6) + '...' + Math.random().toString(16).slice(2,6),
+      zkReceiptId: complaint.txId || complaint.zkReceiptId || 'zk_' + Math.random().toString(16).slice(2,6) + '...' + Math.random().toString(16).slice(2,6),
       status: 'SUBMITTED',
-      reportCount: Math.floor(Math.random() * 2) + 1,
+      reportCount: complaint.count || Math.floor(Math.random() * 2) + 1,
       filedAt: new Date().toISOString(),
+      onChain: complaint.onChain || false,
       ...complaint
     };
     setComplaints((prev: any[]) => {
@@ -148,14 +181,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setComplaints,
       addComplaint,
       wallet: {
-        isConnected: wallet.isConnected,
-        isConnecting: wallet.isConnecting,
-        address: wallet.address,
-        balance: wallet.balance,
-        error: wallet.error,
-        isLaceInstalled: wallet.isLaceInstalled,
-        connect: wallet.connectWallet,
-        disconnect: wallet.disconnectWallet
+        isConnected: walletHook.isConnected,
+        isConnecting: walletHook.isConnecting,
+        address: walletHook.address,
+        balance: walletHook.balance,
+        status: walletHook.status,
+        error: walletHook.error,
+        isInstalled: walletHook.isInstalled,
+        providers: walletHook.providers,
+        connect: walletHook.connect,
+        disconnect: walletHook.disconnect,
       }
     }}>
       {children}

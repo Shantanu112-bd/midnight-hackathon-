@@ -1,73 +1,124 @@
-# React + TypeScript + Vite
+# 🛡️ ProofWork — Workplace Truth, Shielded by Zero-Knowledge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Harnessing Midnight ZKP for a more ethical and transparent workspace. Capture the promises that matter.**
 
-Currently, two official plugins are available:
+<div align="center">
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+[![Demo Video](https://img.shields.io/badge/🎥_Watch-Demo_Video-blue?style=for-the-badge&logo=loom)](https://www.loom.com/share/841dce01bdbb496b81cdb5f97d497630)
+[![Built with Midnight](https://img.shields.io/badge/Built%20with-Midnight-purple?style=for-the-badge)](https://midnight.network)
+[![ZK-Proof Verified](https://img.shields.io/badge/ZK--Proof-Verified-green?style=for-the-badge)](https://docs.midnight.network)
 
-## React Compiler
+</div>
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚩 The Problem
+In modern workplaces, critical promises made during performance reviews or private meetings are often **"lost in translation"** or conveniently forgotten.
+- **Retaliation**: Employees fear reporting broken promises due to a lack of anonymity.
+- **Accountability Gap**: Managers can retract verbal commitments without any audit trail.
+- **Privacy vs. Proof**: Proving a promise existed usually requires sacrificing the privacy of the entire conversation.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 💡 The Solution: ProofWork
+ProofWork is a **Zero-Knowledge Evidence Layer** that allows employees to cryptographically seal specific professional promises on-chain without exposing the underlying data.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Selective Disclosure**: Only the fact that a promise was made is on-chain; the content remains 100% private.
+- **Retaliation-Proof Reporting**: Use ZK-Proofs to file complaints anonymously, proving you are a verified employee without revealing your identity.
+- **Immutability**: Once a promise is sealed via Midnight, it cannot be tampered with or "un-said".
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ✨ Features that Empower
+
+### 🧠 Smart Capture
+Client-side AI analyzed meeting transcripts to extract commitments like salary raises, promotions, or budget approvals instantly.
+
+### 🔐 ZK-Vault
+Seals your promises into the Midnight Network using the `createPromise` circuit. You receive a cryptographic receipt that only you can see.
+
+### 🕵️ Anonymous Whistleblower
+File a complaint against a manager by generating a ZK-Proof of your "Sealed Promise". HR/The Board receives verified evidence without knowing who you are.
+
+---
+
+## 🎮 Live Demo Guide
+
+To experience the power of **Selective Disclosure**, copy-paste this into the dApp:
+
+> "I've reviewed your performance for Q3. You've exceeded all KPIs, and as discussed, I am promising you a 15% salary increment starting from September 30, 2025. This is contingent on you maintaining the same level of leadership in the engineering team."
+
+**Extraction Results:**
+- ✅ **Promise**: 15% Salary Increment
+- ✅ **Deadline**: September 30, 2025
+- ✅ **Condition**: Maintaining leadership level
+
+---
+
+## 🏗️ Architecture Flow
+
+```mermaid
+graph LR
+    A[Review Transcript] --> B(Local AI Extraction)
+    B --> C{Midnight SDK}
+    C -->|createPromise| D[ZK-Sealed Data]
+    D --> E[On-Chain Hash]
+    E --> F((Immutable Receipt))
+    
+    G[Broken Promise] --> H(Anonymous Reporting)
+    H -->|fileComplaint| I{ZK-Proof Gen}
+    I --> J[Verified Complaint]
+    J --> K[Retaliation-Proof Audit]
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## ⚙️ Installation & Setup
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Repository Setup
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/Shantanu112-bd/midnight-hackathon-
+cd proofwork
+npm install
 ```
+
+### 2. Configure Environment
+Create a `.env` file in the root directory:
+```bash
+# Optional: For AI-powered promise extraction
+ANTHROPIC_API_KEY=sk-ant-xxx
+
+# Required: API & Mock settings
+VITE_API_URL=http://localhost:3001
+MOCK_MODE=false
+```
+
+### 3. Start Proof Server (Docker)
+Midnight applications require a proof server to generate ZK proofs locally. Run this in a separate terminal:
+```bash
+docker run -p 6300:6300 midnightntwrk/proof-server:latest midnight-proof-server -v
+```
+
+### 4. Wallet Configuration (Lace)
+1. Install the [Lace Wallet Extension](https://www.lace.io/) (Midnight Beta version).
+2. Enable **Beta Features** in Settings.
+3. Switch to **Developer Mode**.
+4. Set the **Proof Server URL** to `http://localhost:6300`.
+5. Ensure you have testnet tokens (visit the Midnight Faucet).
+
+### 5. Launch the Application
+```bash
+# Start backend API (optional if using local demo mode)
+# npm run api
+
+# Start frontend development server
+npm run dev
+```
+
+---
+
+## 📽️ Final Walkthrough
+[**Watch the Loom Demo Video**](https://www.loom.com/share/841dce01bdbb496b81cdb5f97d497630)
+
+---
+
+> Built with ❤️ for the Midnight Hackathon. **Empowering the individual with Zero-Knowledge.**

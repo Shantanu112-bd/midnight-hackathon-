@@ -160,12 +160,10 @@ export const proofWorkContract = new ProofWork.Contract(defaultWitnesses);
 function buildCompiledContract(
   customWitnesses?: ProofWork.Witnesses<ProofWorkPrivateState>,
 ) {
-  const contract = customWitnesses
-    ? new ProofWork.Contract(customWitnesses)
-    : proofWorkContract;
+  const witnesses = customWitnesses ?? defaultWitnesses;
 
-  return CompiledContract.make('proofwork', contract).pipe(
-    CompiledContract.withVacantWitnesses,
+  return CompiledContract.make('proofwork', ProofWork.Contract).pipe(
+    CompiledContract.withWitnesses(witnesses),
     CompiledContract.withCompiledFileAssets(clientConfig.zkConfigPath),
   );
 }

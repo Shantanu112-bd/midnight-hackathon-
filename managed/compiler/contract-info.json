@@ -14,57 +14,6 @@
             "type-name": "Bytes",
             "length": 32
           }
-        },
-        {
-          "name": "timestamp",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        },
-        {
-          "name": "promiseIdx",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Uint",
-        "maxval": 4294967295
-      }
-    },
-    {
-      "name": "markFulfilled",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "promiseId",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "markBroken",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "promiseId",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
         }
       ],
       "result-type": {
@@ -84,101 +33,16 @@
             "type-name": "Bytes",
             "length": 32
           }
-        },
-        {
-          "name": "targetManagerHash",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        },
-        {
-          "name": "complaintIdx",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
         }
       ],
       "result-type": {
         "type-name": "Tuple",
         "types": [
-        ]
-      }
-    },
-    {
-      "name": "checkThreshold",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "managerSlot",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Boolean"
-      }
-    },
-    {
-      "name": "getReliabilityScore",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "managerIdx",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-          {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          },
-          {
-            "type-name": "Uint",
-            "maxval": 4294967295
-          }
         ]
       }
     }
   ],
   "witnesses": [
-    {
-      "name": "employeeSecretKey",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "managerSecretKey",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "employeeCredential",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    }
   ],
   "contracts": [
   ]

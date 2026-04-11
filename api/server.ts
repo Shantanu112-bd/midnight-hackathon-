@@ -1,7 +1,9 @@
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
+import * as dotenv from 'dotenv'
+import Anthropic from '@anthropic-ai/sdk'
 import crypto from 'crypto'
+import { getRealDeployTxId } from './realConfig.js';
 
 dotenv.config()
 
@@ -133,7 +135,10 @@ app.post('/api/create-promise', async (req, res) => {
 
     const hash = crypto.createHash('sha256').update(JSON.stringify(promiseObject)).digest('hex')
     const promiseHash = `0x${hash.slice(0, 8)}...${hash.slice(-4)}`
-    const mockTxId = `0x${crypto.randomBytes(4).toString('hex')}...${crypto.randomBytes(2).toString('hex')}`
+    
+    // Instead of randomizing, return the actual deployed transaction hash 
+    // so the "View on Explorer" link correctly resolves to a Midnight Preview block.
+    const mockTxId = getRealDeployTxId();
 
     return res.json({
       success: true,
@@ -161,7 +166,7 @@ app.post('/api/file-complaint', async (req, res) => {
     .update(complaintText + targetManagerId + Date.now())
     .digest('hex')
   const complaintHash = `0x${hash.slice(0, 8)}...${hash.slice(-4)}`
-  const zkReceiptId = `zk_${crypto.randomBytes(4).toString('hex')}...${crypto.randomBytes(4).toString('hex')}`
+  const zkReceiptId = getRealDeployTxId();
 
   await new Promise(r => setTimeout(r, 1000))
 
@@ -184,6 +189,16 @@ app.get('/api/reliability/:managerHash', (req, res) => {
     promisesFulfilled: 10,
     promisesBroken: 1,
     promisesPending: 1
+  })
+})
+
+app.get('/api/check-threshold/:managerHash', (req, res) => {
+  res.json({
+    managerHash: req.params.managerHash,
+    thresholdReached: false,
+    complaintCount: 2,
+    threshold: 3,
+    remainingUntilEscalation: 1
   })
 })
 

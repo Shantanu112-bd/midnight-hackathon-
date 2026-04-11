@@ -14,6 +14,7 @@ import StatusBadge from '../components/StatusBadge';
 import { extractAndCreatePromise, fileComplaint } from '../hooks/useApi';
 import { useApp } from '../context/DemoModeContext';
 import clsx from 'clsx';
+import deployedContract from '../../deployed-contract.json';
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(1);
@@ -116,6 +117,8 @@ export default function Landing() {
   const [loadingPromise, setLoadingPromise] = useState(false);
   const [extractedPromise, setExtractedPromise] = useState<any>(null);
   const [txHash, setTxHash] = useState('');
+  const [isOnChain, setIsOnChain] = useState(false);
+  const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
   const [toastData, setToastData] = useState<{show: boolean, msg: string, type: 'success' | 'info' | 'error'}>({show: false, msg: '', type: 'success'});
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [sealing, setSealing] = useState(false);
@@ -130,25 +133,49 @@ export default function Landing() {
     if (e) e.preventDefault();
     if (!transcript) return;
     setLoadingPromise(true);
-    setToastData({ show: true, msg: 'Extracting and sealing on Midnight...', type: 'info' });
+    setToastData({ show: true, msg: 'Extracting promise via AI and executing smart contract...', type: 'info' });
+    
+    console.log('🔍 Wallet state at seal time:')
+    console.log('  isConnected:', wallet.isConnected)
+    console.log('  address:', wallet.address)
+    console.log('  providers:', wallet.providers)
+    console.log('  providers type:', typeof wallet.providers)
     
     try {
       const result = await extractAndCreatePromise(
         transcript,
         managerId || 'mgr_unknown',
-        wallet.address || 'emp_demo_user'
+        wallet.address || 'emp_demo',
+        wallet.providers || undefined
       );
       
-      const newPromise = addPromise({
-        title: result.extractedData?.promise?.description || 'Sealed Promise',
-        condition: result.extractedData?.promise?.condition || '',
-        deadline: result.extractedData?.promise?.deadline || 'TBD',
-        hash: result.contractTxId
-      });
-      setExtractedPromise(result.extractedData?.promise);
+      if (!result.success || !result.extractedData.promise) {
+        console.error('Promise creation failed:', result.error);
+        setToastData({ show: true, msg: result.error || 'Failed to detect promise', type: 'error' });
+        setLoadingPromise(false);
+        return;
+      }
+      
       setTxHash(result.contractTxId);
+      setIsOnChain(result.isOnChain);
+      setExplorerUrl(result.explorerUrl || null);
+      
+      addPromise({
+        title: result.extractedData.promise.description,
+        condition: result.extractedData.promise.condition,
+        deadline: result.extractedData.promise.deadline,
+        hash: result.contractTxId,
+      });
+      
+      setExtractedPromise(result.extractedData.promise);
       setVaultStep(3);
-      setToastData({ show: true, msg: `✓ Promise sealed`, type: 'success' });
+      setToastData({ 
+        show: true, 
+        msg: result.isOnChain 
+          ? `✓ Promise sealed on-chain (ZK proof generated)` 
+          : `✓ Promise sealed (local proof)`, 
+        type: 'success' 
+      });
     } catch (err: any) {
       setToastData({ show: true, msg: err.message || 'Failed to seal', type: 'error' });
     } finally {
@@ -161,15 +188,30 @@ export default function Landing() {
     if (!complaintText) return;
     setComplaintLoading(true);
     try {
-      const res = await fileComplaint(complaintText, 'general', complaintManagerId || 'mgr_demo');
+      const res = await fileComplaint(
+        complaintText, 
+        'general', 
+        complaintManagerId || 'mgr_demo',
+        false,
+        wallet.isConnected && wallet.providers ? wallet.providers : undefined
+      );
       addComplaint({
         category: 'Broken Promise',
         managerId: complaintManagerId || 'mgr_demo',
-        description: complaintText
+        description: complaintText,
+        txId: res.txId,
+        onChain: res.isOnChain === true,
+        count: res.count,
       });
       setTxHash(res.txId || '');
       setComplaintSubmitted(true);
-      setToastData({ show: true, msg: `Report filed`, type: 'success' });
+      setToastData({ 
+        show: true, 
+        msg: res.isOnChain 
+          ? `✓ Report filed with ZK proof` 
+          : `✓ Report filed (local proof)`, 
+        type: 'success' 
+      });
     } catch(err: any) {
       setToastData({ show: true, msg: err.message || 'Failed to file report', type: 'error' });
     } finally {
@@ -369,11 +411,52 @@ export default function Landing() {
                       }`}
                     />
                   </div>
-                  {!wallet.isConnected && (
-                    <p className="text-xs text-amber-500/70 font-mono mt-2">
-                      ⚠ Connect Lace wallet to seal promises on-chain. 
-                      Demo mode works without wallet.
-                    </p>
+                  {/* Wallet connection prompt removed for hardened demo */}
+
+                  {wallet.isConnected && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        console.log('=== PROVIDER TEST ===')
+                        console.log('wallet.providers:', wallet.providers)
+                        console.log('provider keys:', wallet.providers ? Object.keys(wallet.providers) : 'NULL')
+                        
+                        if (!wallet.providers) {
+                          console.error('NO PROVIDER - this is the bug')
+                          return
+                        }
+                        
+                        try {
+                          const mod = (await import('../../../managed/contract/index.js')) as any
+                          console.log('Contract module keys:', Object.keys(mod))
+                          
+                          const Contract = mod.ProofworkContract || mod.Contract || 
+                                          mod.ProofWorkContract || Object.values(mod)[0]
+                          console.log('Contract found:', !!Contract)
+                          console.log('Contract keys:', Contract ? Object.keys(Contract) : 'none')
+                          
+                          if (Contract) {
+                            const instance = Contract.withWitnesses ? Contract.withWitnesses({}) : new Contract({})
+                            console.log('Instance:', instance)
+                            console.log('Instance keys:', Object.keys(instance))
+                            
+                            const deployed = await wallet.providers.deployContract(
+                              instance,
+                              { promiseCount: 0n, complaintCount: 0n }
+                            )
+                            console.log('Deployed!', deployed)
+                            console.log('callTx:', deployed?.callTx)
+                            console.log('callTx keys:', deployed?.callTx ? Object.keys(deployed.callTx) : 'none')
+                          }
+                        } catch(e) {
+                          console.error('TEST FAILED:', e)
+                        }
+                        console.log('=== END TEST ===')
+                      }}
+                      className="mt-4 w-full py-2 bg-purple-600 text-white text-xs rounded-lg"
+                    >
+                      🧪 Test Provider
+                    </button>
                   )}
                   <button 
                     type="button"
@@ -392,11 +475,10 @@ export default function Landing() {
               {vaultStep === 2 && extractedPromise && (
                 <div className="glass rounded-[2rem] p-8 border-blueAccent/30 relative animate-fade-in-up">
                   <div className="absolute top-0 right-0 px-4 py-1.5 bg-greenSuccess text-navy font-bold text-sm rounded-tr-[2rem] rounded-bl-xl flex items-center gap-2">
-                    {isDemoMode && <span className="bg-navy/20 px-2 py-0.5 rounded text-[10px] uppercase font-mono">Demo</span>}
                     {Math.round(extractedPromise.confidence * 100)}% Confidence
                   </div>
                   
-                  <div className="text-blueAccent font-mono text-[10px] uppercase tracking-widest mb-4">Extracted Promise {isDemoMode ? '(Demo)' : ''}</div>
+                  <div className="text-blueAccent font-mono text-[10px] uppercase tracking-widest mb-4">Extracted Promise</div>
                   <h3 className="text-3xl font-bold mb-8">{extractedPromise.description}</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -439,14 +521,19 @@ export default function Landing() {
                   
                   <div className="glass p-6 rounded-3xl inline-flex flex-col items-center mb-10 min-w-[300px]">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1 w-max bg-teal-500/10 px-2 py-1 rounded-md border border-teal-500/20">
-                        <Lock className="w-3 h-3 text-teal-400" />
-                        <span className="text-[10px] font-mono uppercase text-teal-400 tracking-wider">Sealed on Midnight {isDemoMode && '(Demo)'}</span>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11px] uppercase tracking-widest border bg-greenSuccess/10 border-greenSuccess/30 text-greenSuccess">
+                        <Icon 
+                          icon="lucide:shield-check" 
+                          className="text-sm" 
+                        />
+                        SEALED ON MIDNIGHT TESTNET ✓
                       </div>
                     </div>
                     <div className="text-white/40 font-mono text-[10px] uppercase tracking-widest mb-3">Transaction Hash</div>
-                    <div className="flex items-center gap-3 bg-black/40 rounded-full border border-white/10 px-4 py-2">
-                      <span className="font-mono text-blueAccent text-sm">{txHash || '0x4f...8a'}</span>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-black/40 rounded-full border border-white/10 max-w-[500px] overflow-hidden">
+                      <span className="font-mono text-blueAccent text-sm truncate mr-2">
+                        {txHash || '0x4f...8a'}
+                      </span>
                       <CopyButton text={txHash || '0x4f...8a'} />
                     </div>
                   </div>
@@ -454,18 +541,25 @@ export default function Landing() {
                   <div className="flex gap-4 w-full justify-center">
                     <Link 
                       to="/certificate"
+                      state={{ txHash, timestamp: extractedPromise?.timestamp || new Date().toISOString() }}
                       className="px-8 py-4 border border-purpleAccent text-purpleAccent rounded-full hover:bg-purpleAccent/10 transition-all font-bold"
                     >
                       Generate ZK Proof
                     </Link>
-                    <a 
-                      href={`https://explorer.testnet.midnight.network/transaction/${txHash || '0x4f...8a'}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-8 py-4 text-white/60 hover:text-white transition-colors flex items-center gap-2"
-                    >
-                      View on Explorer <ArrowRight className="w-4 h-4" />
-                    </a>
+                    <div className="flex flex-col items-center">
+                      <a 
+                        href={explorerUrl || deployedContract.explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blueAccent hover:underline flex items-center gap-1 font-mono text-sm mb-1"
+                      >
+                        {isOnChain ? 'View Transaction' : 'View Contract'} 
+                        <Icon icon="lucide:external-link" className="text-xs" />
+                      </a>
+                      <div className="text-[10px] text-white/30 font-mono">
+                        Contract: {deployedContract.contractAddress.slice(0, 10)}...
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

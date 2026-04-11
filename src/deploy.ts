@@ -21,7 +21,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { Buffer } from 'buffer';
 import * as Rx from 'rxjs';
-import { WebSocket } from 'ws';
+import WebSocket from 'ws';
 
 // Required for GraphQL subscriptions (wallet sync) to work in Node.js
 // @ts-expect-error: Needed to enable WebSocket usage through apollo
@@ -384,7 +384,7 @@ async function deployProofWorkContract() {
   console.log(`  Unshielded Address (send tNight here):`);
   console.log(`  ${walletCtx.unshieldedKeystore.getBech32Address()}`);
   console.log(`\n  Fund your wallet with tNight from the faucet:`);
-  console.log(`  https://faucet.preview.midnight.network/`);
+  console.log(`  https://faucet.preprod.midnight.network/`);
   console.log(`${DIV}\n`);
 
   // 3. Wait for sync
@@ -411,14 +411,13 @@ async function deployProofWorkContract() {
   await registerForDustGeneration(walletCtx.wallet, walletCtx.unshieldedKeystore);
 
   // 6. Configure providers
-  const providers = await withStatus('Configuring providers', () => createProviders(walletCtx));
+  const providers = await createProviders(walletCtx);
 
-  // 7. Deploy
-  console.log('');
-  console.log(`  Node:         ${config.node}`);
-  console.log(`  Indexer:      ${config.indexer}`);
-  console.log(`  Proof Server: ${config.proofServer}`);
-  console.log('');
+  return { providers, walletCtx, config };
+}
+
+async function main() {
+  const { providers, config } = await deployProofWorkContract();
 
   const deployedContract = await withStatus('Deploying ProofWork contract', () =>
     deployContract(providers, {
@@ -460,7 +459,8 @@ async function deployProofWorkContract() {
 // Entry Point
 // ────────────────────────────────────────────────────────────────────
 
-deployProofWorkContract()
+// Execute the main deployment flow
+main()
   .then((address) => {
     console.log(`\n✓ Done. Contract address: ${address}`);
     process.exit(0);

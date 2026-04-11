@@ -1,0 +1,13 @@
+{
+  "contractAddress": "0x04ae24e8e32d531a1d9d1b6ac635e76d8d3329ab",
+  "deployedAt": "2026-04-11T17:13:46.073Z",
+  "network": "Midnight DevNet",
+  "compiler": "Compact 0.28",
+  "circuits": [
+    "createPromise",
+    "fileComplaint",
+    "getPromiseCount",
+    "getComplaintCount"
+  ],
+  "explorerUrl": "https://explorer.devnet.midnight.network/contracts/0x04ae24e8e32d531a1d9d1b6ac635e76d8d3329ab"
+}

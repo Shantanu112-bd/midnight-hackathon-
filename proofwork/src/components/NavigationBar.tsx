@@ -6,12 +6,13 @@ import { useApp } from '../context/DemoModeContext';
 import clsx from 'clsx';
 import { WalletConnect } from './WalletConnect';
 
+
 interface NavigationBarProps {
   activeItem?: 'vault' | 'complaint' | 'security' | 'landing' | 'manager' | 'settings';
 }
 
 export default function NavigationBar({ activeItem = 'landing' }: NavigationBarProps) {
-  const { demoMode, toggleDemoMode } = useApp();
+  const { demoMode, toggleDemoMode, wallet } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,10 +73,11 @@ export default function NavigationBar({ activeItem = 'landing' }: NavigationBarP
         
         {/* Right: Actions */}
         <div className="flex items-center gap-3 md:gap-6">
+
           <div className="hidden lg:flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-greenSuccess animate-pulse" />
+            <div className={`w-2 h-2 rounded-full animate-pulse bg-greenSuccess`} />
             <span className="font-mono text-[10px] uppercase text-white/50 tracking-wider">
-              Midnight Devnet
+              Midnight Preprod
             </span>
           </div>
 
